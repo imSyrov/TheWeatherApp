@@ -10,5 +10,4 @@ target 'TheWeatherApp' do
   # Pods for TheWeatherApp
 pod 'Alamofire'
 pod 'RealmSwift'
-pod 'KeychainAccess'
 end
