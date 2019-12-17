@@ -19,6 +19,12 @@ class MainController: UIViewController {
     @IBOutlet weak var forecastCollectionView: UICollectionView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
+    let updateRefreshControl: UIRefreshControl = {
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(updateWeather(sender:)), for: .valueChanged)
+        return refreshControl
+    }()
+    
     var currentCity: String?
     var forecastWeather: ForecastWeatherModel?
     var forecastCells: [ForecastDataModel] = [] {
@@ -34,9 +40,12 @@ class MainController: UIViewController {
         forecastCollectionView.dataSource = self
         forecastCollectionView.delegate = self
         forecastCollectionView.register(ForecastWeatherCell.self)
+        currentTableView.refreshControl = updateRefreshControl
     }
     
     func loadWeather(for city: String?) {
+        self.cityTextField.resignFirstResponder()
+        dataView.isHidden = true
         guard let city = city else { return }
         
         if city.isEmpty {
@@ -52,7 +61,7 @@ class MainController: UIViewController {
                 switch result {
                 case .success(let weather):
                     self?.conditionImageView.load(for: weather.options[0].icon)
-                    self?.fillTable(data: weather)
+                    self?.fillTable(weather)
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
                 }
@@ -80,7 +89,7 @@ class MainController: UIViewController {
         }
     }
     
-    func fillTable(data: CurrentWeatherModel) {
+    func fillTable(_ data: CurrentWeatherModel) {
         let header = data.name + "\t" + (data.date?.toString(with: "dd.MM HH:mm") ?? "0.0")
         self.systemInfomationLabel.text = header
         var rows: [WeatherOptionTableRow] = []
@@ -105,9 +114,12 @@ class MainController: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     
+    @objc private func updateWeather(sender: UIRefreshControl) {
+        loadWeather(for: currentCity)
+        sender.endRefreshing()
+    }
+    
     @IBAction func searchButtonPressed(_ sender: UIButton) {
-        self.cityTextField.resignFirstResponder()
-        dataView.isHidden = true
         currentCity = cityTextField.text
         loadWeather(for: currentCity)
     }
