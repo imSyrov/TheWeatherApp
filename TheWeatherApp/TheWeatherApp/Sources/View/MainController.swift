@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Alamofire
 
 class MainController: UIViewController {
     
@@ -18,13 +19,7 @@ class MainController: UIViewController {
     @IBOutlet weak var currentTableView: WeatherOptionTableView!
     @IBOutlet weak var forecastCollectionView: UICollectionView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
-    
-    let updateRefreshControl: UIRefreshControl = {
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(updateWeather(sender:)), for: .valueChanged)
-        return refreshControl
-    }()
-    
+        
     var currentCity: String?
     var forecastWeather: ForecastWeatherModel?
     var forecastCells: [ForecastDataModel] = [] {
@@ -40,11 +35,11 @@ class MainController: UIViewController {
         forecastCollectionView.dataSource = self
         forecastCollectionView.delegate = self
         forecastCollectionView.register(ForecastWeatherCell.self)
-        currentTableView.refreshControl = updateRefreshControl
     }
     
     func loadWeather(for city: String?) {
         self.cityTextField.resignFirstResponder()
+        self.forecastCells.removeAll()
         dataView.isHidden = true
         guard let city = city else { return }
         
@@ -54,23 +49,20 @@ class MainController: UIViewController {
         }
         loadScreenView.isHidden = false
         activityIndicator.startAnimating()
-        let requestGroup = DispatchGroup()
+        let parameters: Parameters = ["q" : city]
         
-        DispatchQueue.global().async(group: requestGroup) {
-            APIWeather.shared.getCurrentWeather(city: city) { [weak self] result in
-                switch result {
+        getCurrentWeather(parameters: parameters) { [weak self] result in
+            switch result {
                 case .success(let weather):
                     self?.conditionImageView.load(for: weather.options[0].icon)
                     self?.fillTable(weather)
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
-                }
             }
         }
         
-        DispatchQueue.global().async(group: requestGroup) {
-            APIWeather.shared.getForecastWeather(city: city) { [weak self] result in
-                switch result {
+        getForecastWeather(parameters: parameters) { [weak self] result in
+            switch result {
                 case .success(let weather):
                     self?.forecastWeather = weather
                     weather.data.forEach { data in
@@ -78,15 +70,12 @@ class MainController: UIViewController {
                     }
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
-                }
             }
         }
         
-        requestGroup.notify(queue: DispatchQueue.main) {
-            self.activityIndicator.stopAnimating()
-            self.loadScreenView.isHidden = true
-            self.dataView.isHidden = false
-        }
+        self.activityIndicator.stopAnimating()
+        self.loadScreenView.isHidden = true
+        self.dataView.isHidden = false
     }
     
     func fillTable(_ data: CurrentWeatherModel) {
@@ -114,15 +103,26 @@ class MainController: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     
-    @objc private func updateWeather(sender: UIRefreshControl) {
-        loadWeather(for: currentCity)
-        sender.endRefreshing()
+    func getCurrentWeather(parameters: Parameters, complition: @escaping (Result<CurrentWeatherModel>) -> Void) {
+        let API = APIService()
+        API.getObject(for: .current, parameters: parameters, complition: complition)
+    }
+    
+    func getForecastWeather(parameters: Parameters, complition: @escaping (Result<ForecastWeatherModel>) -> Void) {
+        let API = APIService()
+        API.getObject(for: .forecast, parameters: parameters, complition: complition)
     }
     
     @IBAction func searchButtonPressed(_ sender: UIButton) {
         currentCity = cityTextField.text
         loadWeather(for: currentCity)
     }
+    
+    @IBAction func refreshButtonPressed(_ sender: UIBarButtonItem) {
+        
+        loadWeather(for: currentCity)
+    }
+    
 }
 
 extension MainController: UICollectionViewDataSource {

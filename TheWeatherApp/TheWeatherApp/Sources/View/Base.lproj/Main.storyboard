@@ -10,7 +10,7 @@
         <!--Weather-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController title="Weather" id="BYZ-38-t0r" customClass="MainController" customModule="TheWeatherApp" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Weather" automaticallyAdjustsScrollViewInsets="NO" id="BYZ-38-t0r" customClass="MainController" customModule="TheWeatherApp" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="524"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -141,7 +141,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
-                    <navigationItem key="navigationItem" title="Weather" id="x4D-rB-z6F"/>
+                    <extendedEdge key="edgesForExtendedLayout"/>
+                    <navigationItem key="navigationItem" title="Weather" id="x4D-rB-z6F">
+                        <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="EUo-u3-dcv">
+                            <color key="tintColor" systemColor="systemBlueColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <connections>
+                                <action selector="refreshButtonPressed:" destination="BYZ-38-t0r" id="0Rq-XG-rU4"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
                     <connections>
                         <outlet property="activityIndicator" destination="9Le-mB-3CH" id="vob-ml-fgV"/>
@@ -161,7 +169,8 @@
         <!--Navigation Controller-->
         <scene sceneID="0Rq-Uu-lEn">
             <objects>
-                <navigationController id="ZTl-L2-Ibx" sceneMemberID="viewController">
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="ZTl-L2-Ibx" sceneMemberID="viewController">
+                    <extendedEdge key="edgesForExtendedLayout"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="41v-fI-rlt">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>

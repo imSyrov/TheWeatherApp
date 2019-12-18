@@ -9,25 +9,22 @@
 import Foundation
 import Alamofire
 
-final class APIService: Decodable {
-    public static let shared = APIService()
+class APIService: Decodable {
     private let domain = "http://api.openweathermap.org"
-    private let endPoind = "/data/2.5"
+    private let endPoint = "/data/2.5"
     private let apiKey = "67012d457377285f7c56f0008dd25f9e"
     
-    func getWeather<T: Decodable> (city: String, weather: WeatherType, handler: @escaping (Result<T>) -> Void) {
+    func getObject<T: Decodable> (for endPoint: WeatherType, parameters: Parameters, complition: @escaping (Result<T>) -> Void) {
         
-        let parameters = [
-            "q" : city,
-            "units" : "metric",
-            "appid" : apiKey
-        ]
+        var allParameters = parameters
+        allParameters["units"] = "metric"
+        allParameters["appid"] = apiKey
         
-        guard let url = URL(string: domain)?.appendingPathComponent(endPoind).appendingPathComponent(weather.rawValue) else { return }
+        guard let url = URL(string: domain)?.appendingPathComponent(self.endPoint).appendingPathComponent(endPoint.rawValue) else { return }
         
-        Alamofire.request(url, method: .get, parameters: parameters, encoding: URLEncoding.queryString).responseJSON { response in
+        Alamofire.request(url, method: .get, parameters: allParameters, encoding: URLEncoding.queryString).responseJSON { response in
             if let error = response.error {
-                handler(.failure(error))
+                complition(.failure(error))
             }
             
             guard let data = response.data else { return }
@@ -36,9 +33,9 @@ final class APIService: Decodable {
                 let decoder = JSONDecoder()
                 decoder.dateDecodingStrategy = .secondsSince1970
                 let weatherData = try decoder.decode(T.self, from: data)
-                handler(.success(weatherData))
+                complition(.success(weatherData))
             } catch (let error) {
-                handler(.failure(error))
+                complition(.failure(error))
             }
         }
     }
