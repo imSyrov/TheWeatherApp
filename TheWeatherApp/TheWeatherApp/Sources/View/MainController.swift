@@ -19,7 +19,8 @@ class MainController: UIViewController {
     @IBOutlet weak var currentTableView: WeatherOptionTableView!
     @IBOutlet weak var forecastCollectionView: UICollectionView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
-        
+    
+    
     var currentCity: String?
     var forecastWeather: ForecastWeatherModel?
     var forecastCells: [ForecastDataModel] = [] {
@@ -30,30 +31,50 @@ class MainController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        cityTextField.text = "Samara"
         
         forecastCollectionView.dataSource = self
         forecastCollectionView.delegate = self
         forecastCollectionView.register(ForecastWeatherCell.self)
     }
     
-    func loadWeather(for city: String?) {
+    func getWeather(for city: String?) {
         self.cityTextField.resignFirstResponder()
-        self.forecastCells.removeAll()
+        activityIndicator.startAnimating()
         dataView.isHidden = true
+        self.forecastCells.removeAll()
+        loadScreenView.isHidden = false
         guard let city = city else { return }
         
         if city.isEmpty {
             showAlert(message: "Sorry, You didn't enter the city")
+            self.activityIndicator.stopAnimating()
+            self.loadScreenView.isHidden = true
             return
         }
-        loadScreenView.isHidden = false
-        activityIndicator.startAnimating()
+        
+        let connection = InternetConnection()
+        
+        if connection.checkConnection() {
+            DatabaseService.database.clearData()
+            loadWeatherFromInternet(for: city)
+        }
+        else {
+            loadWeatherFromDatabase()
+        }
+        
+        self.activityIndicator.stopAnimating()
+        self.loadScreenView.isHidden = true
+        self.dataView.isHidden = false
+    }
+    
+    func loadWeatherFromInternet(for city: String) {
         let parameters: Parameters = ["q" : city]
+        let weatherModel = WeatherModel()
         
         getCurrentWeather(parameters: parameters) { [weak self] result in
             switch result {
                 case .success(let weather):
+                    weatherModel.current = weather
                     self?.conditionImageView.load(for: weather.options[0].icon)
                     self?.fillTable(weather)
                 case .failure(let error):
@@ -64,6 +85,8 @@ class MainController: UIViewController {
         getForecastWeather(parameters: parameters) { [weak self] result in
             switch result {
                 case .success(let weather):
+                    weatherModel.forecast = weather
+                    DatabaseService.database.add(objects: [weatherModel])
                     self?.forecastWeather = weather
                     weather.data.forEach { data in
                         self?.forecastCells.append(data)
@@ -72,10 +95,33 @@ class MainController: UIViewController {
                     self?.showAlert(message: "\(error.localizedDescription)")
             }
         }
-        
-        self.activityIndicator.stopAnimating()
-        self.loadScreenView.isHidden = true
-        self.dataView.isHidden = false
+    }
+    
+    func loadWeatherFromDatabase() {
+        let objects: [WeatherModel] = DatabaseService.database.read()
+        if objects.count > 0 {
+            showAlert(message: "No Internet connection")
+            guard let weather = objects.first else { return }
+            guard let current = weather.current else { return }
+            self.fillTable(current)
+            self.forecastWeather = weather.forecast            
+            forecastWeather?.data.forEach { data in
+                self.forecastCells.append(data)
+            }
+        } else {
+            showAlert(message: "Error: Datas can't be received")
+            return
+        }
+    }
+    
+    func getCurrentWeather(parameters: Parameters, complition: @escaping (Result<CurrentWeatherModel>) -> Void) {
+        let API = APIService()
+        API.getObject(for: .current, parameters: parameters, complition: complition)
+    }
+    
+    func getForecastWeather(parameters: Parameters, complition: @escaping (Result<ForecastWeatherModel>) -> Void) {
+        let API = APIService()
+        API.getObject(for: .forecast, parameters: parameters, complition: complition)
     }
     
     func fillTable(_ data: CurrentWeatherModel) {
@@ -96,31 +142,20 @@ class MainController: UIViewController {
         currentTableView.setHeader(header)
         currentTableView.setRows(rows)
     }
-
+    
     func showAlert(message: String) {
         let alert = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
-    func getCurrentWeather(parameters: Parameters, complition: @escaping (Result<CurrentWeatherModel>) -> Void) {
-        let API = APIService()
-        API.getObject(for: .current, parameters: parameters, complition: complition)
-    }
-    
-    func getForecastWeather(parameters: Parameters, complition: @escaping (Result<ForecastWeatherModel>) -> Void) {
-        let API = APIService()
-        API.getObject(for: .forecast, parameters: parameters, complition: complition)
-    }
-    
     @IBAction func searchButtonPressed(_ sender: UIButton) {
         currentCity = cityTextField.text
-        loadWeather(for: currentCity)
+        getWeather(for: currentCity)
     }
     
     @IBAction func refreshButtonPressed(_ sender: UIBarButtonItem) {
-        
-        loadWeather(for: currentCity)
+        getWeather(for: currentCity)
     }
     
 }
