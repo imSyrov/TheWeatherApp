@@ -26,7 +26,7 @@ class ForecastWeatherController: UIViewController {
         headerLabel.text = (systemInformation?.name ?? "none") + "\n" + (forecastModel?.date?.toString(with: "dd:MM HH:mm") ?? "00:00")
         fillTable(data: forecastModel, system: systemInformation)
                 
-        if let imageName = forecastModel?.options[0].icon {
+        if let imageName = forecastModel?.options.first?.icon {
             conditionImageView.load(for: imageName)
         }
         

@@ -55,7 +55,6 @@ class MainController: UIViewController {
         let connection = InternetConnection()
         
         if connection.checkConnection() {
-            //DatabaseService.database.clearData()
             loadWeatherFromInternet(for: city)
         }
         else {
@@ -67,17 +66,19 @@ class MainController: UIViewController {
     }
     
     func loadWeatherFromInternet(for city: String) {
-        let request = WeatherRequest(for: city)
+        let request = WeatherRequest()
         let requestGroup = DispatchGroup()
         var currentWeather: CurrentWeatherModel?
         self.forecastWeather = nil
         
         requestGroup.enter()
-        request.getCurrentWeather() { [weak self] result in
+        request.getCurrentWeather(for: city) { [weak self] result in
             switch result {
                 case .success(let weather):
                     currentWeather = weather
-                    self?.conditionImageView.load(for: weather.options[0].icon)
+                    if let name = weather.options.first?.icon {
+                        self?.conditionImageView.load(for: name)
+                    }                    
                     self?.systemInfomationLabel.text = weather.name + "\t" + (weather.date?.toString(with: "dd.MM HH:mm") ?? "")
                     self?.currentTableView.fillTable(data: weather)
                 case .failure(let error):
@@ -87,7 +88,7 @@ class MainController: UIViewController {
         }
         
         requestGroup.enter()
-        request.getForecastWeather() { [weak self] result in
+        request.getForecastWeather(for: city) { [weak self] result in
             switch result {
                 case .success(let weather):
                     self?.forecastWeather = weather

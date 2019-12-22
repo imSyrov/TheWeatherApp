@@ -19,7 +19,8 @@ class ForecastWeatherCell: UICollectionViewCell {
         dateLabel.text = data.date?.toString(with: "dd.MM HH:mm")
         degreesLabel.text = data.main?.temperature.toDegrees()
         windSpeedLabel.text = data.wind?.speed.toSpeed()
-        conditionImageView.load(for: data.options[0].icon)
+        if let name = data.options.first?.icon {
+            conditionImageView.load(for: name)
+        }
     }
-
 }

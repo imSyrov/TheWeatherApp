@@ -11,18 +11,15 @@ import Alamofire
 
 class WeatherRequest {
     let API = APIService()
-    var parameters: Parameters = [:]
+    var parameters: Parameters = ["units" : "metric"]    
     
-    init(for city: String) {
+    func getCurrentWeather(for city: String, completion: @escaping (Result<CurrentWeatherModel>) -> Void) {
         self.parameters["q"] = city
-        self.parameters["units"] = "metric"
+        API.getObject(for: WeatherType.current.rawValue, parameters: parameters, completion: completion)
     }
     
-    func getCurrentWeather(complition: @escaping (Result<CurrentWeatherModel>) -> Void) {
-        API.getObject(for: WeatherType.current.rawValue, parameters: parameters, complition: complition)
-    }
-    
-    func getForecastWeather(complition: @escaping (Result<ForecastWeatherModel>) -> Void) {
-        API.getObject(for: WeatherType.forecast.rawValue, parameters: parameters, complition: complition)
+    func getForecastWeather(for city: String, completion: @escaping (Result<ForecastWeatherModel>) -> Void) {
+        self.parameters["q"] = city
+        API.getObject(for: WeatherType.forecast.rawValue, parameters: parameters, completion: completion)
     }
 }
