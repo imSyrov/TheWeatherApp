@@ -17,15 +17,4 @@ class ForecastWeatherModel: Object, Decodable {
         case city
         case data = "list"
     }
-    
-    required init(decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.city = try container.decode(SystemInformationForecastModel.self, forKey: .city)
-        self.data = try container.decode(List<ForecastDataModel>.self, forKey: .data)
-    }
-    
-    required init() {
-        super.init()
-    }
 }

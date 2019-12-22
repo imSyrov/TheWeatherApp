@@ -23,18 +23,4 @@ class SystemInformationForecastModel: Object, Decodable {
         case sunrise
         case sunset
     }
-    
-    required init(decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.coordinates = try container.decode(CoordinatesModel.self, forKey: .coordinates)
-        self.name = try container.decode(String.self, forKey: .name)
-        self.country = try container.decode(String.self, forKey: .country)
-        self.sunrise = try container.decode(Date.self, forKey: .sunrise)
-        self.sunset = try container.decode(Date.self, forKey: .sunset)
-    }
-    
-    required init() {
-        super.init()
-    }
 }

@@ -18,18 +18,19 @@ class DatabaseService {
     
     private init() {
         let fileURL = DatabaseService.documentDirectoryURL.appendingPathComponent("database", isDirectory: false)
-        let configuration = Realm.Configuration(fileURL: fileURL, schemaVersion: 2)
+        let configuration = Realm.Configuration(fileURL: fileURL, schemaVersion: 3)
         realm = try! Realm(configuration: configuration)
     }
     
     func add<T: Object>(objects: [T]) {
         try! self.realm.write({
-            realm.add(objects)
+            realm.add(objects, update: .all)
         })
     }
     
-    func read<T: Object> () -> [T] {
-        let objects = self.realm.objects(T.self)
+    func read<T: Object> (filter: String? = nil) -> [T] {
+        guard let filter = filter else { return Array(self.realm.objects(T.self).map({ $0 })) }
+        let objects = self.realm.objects(T.self).filter(filter)
         return Array(objects.map({ $0 }))
     }
     

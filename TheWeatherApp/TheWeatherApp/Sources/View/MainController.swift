@@ -22,7 +22,6 @@ class MainController: UIViewController {
     
     
     var currentCity: String?
-    var currentWeather: CurrentWeatherModel?
     var forecastWeather: ForecastWeatherModel?
     var forecastCells: [ForecastDataModel] = [] {
         didSet {
@@ -56,11 +55,11 @@ class MainController: UIViewController {
         let connection = InternetConnection()
         
         if connection.checkConnection() {
-            DatabaseService.database.clearData()
+            //DatabaseService.database.clearData()
             loadWeatherFromInternet(for: city)
         }
         else {
-            loadWeatherFromDatabase()
+            loadWeatherFromDatabase(for: city)
             self.activityIndicator.stopAnimating()
             self.loadScreenView.isHidden = true
             self.dataView.isHidden = false
@@ -70,24 +69,25 @@ class MainController: UIViewController {
     func loadWeatherFromInternet(for city: String) {
         let request = WeatherRequest(for: city)
         let requestGroup = DispatchGroup()
+        var currentWeather: CurrentWeatherModel?
+        self.forecastWeather = nil
         
         requestGroup.enter()
         request.getCurrentWeather() { [weak self] result in
-            requestGroup.leave()
             switch result {
                 case .success(let weather):
-                    self?.currentWeather = weather
+                    currentWeather = weather
                     self?.conditionImageView.load(for: weather.options[0].icon)
                     self?.systemInfomationLabel.text = weather.name + "\t" + (weather.date?.toString(with: "dd.MM HH:mm") ?? "")
                     self?.currentTableView.fillTable(data: weather)
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
             }
+            requestGroup.leave()
         }
         
         requestGroup.enter()
         request.getForecastWeather() { [weak self] result in
-            requestGroup.leave()
             switch result {
                 case .success(let weather):
                     self?.forecastWeather = weather
@@ -97,21 +97,22 @@ class MainController: UIViewController {
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
             }
+            requestGroup.leave()
         }
         
         requestGroup.notify(queue: DispatchQueue.main) {
-            if let current = self.currentWeather, let forecast = self.forecastWeather {
+            if let current = currentWeather, let forecast = self.forecastWeather {
                 let weatherModel = WeatherModel(current: current, forecast: forecast)
                 DatabaseService.database.add(objects: [weatherModel])
+                self.dataView.isHidden = false
             }
             self.activityIndicator.stopAnimating()
             self.loadScreenView.isHidden = true
-            self.dataView.isHidden = false
         }
     }
     
-    func loadWeatherFromDatabase() {
-        let objects: [WeatherModel] = DatabaseService.database.read()
+    func loadWeatherFromDatabase(for city: String) {
+        let objects: [WeatherModel] = DatabaseService.database.read(filter: "city == '\(city)'")
         if objects.count > 0 {
             showAlert(message: "No Internet connection")
             guard let weather = objects.first else { return }

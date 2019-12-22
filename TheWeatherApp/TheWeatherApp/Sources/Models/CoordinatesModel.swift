@@ -17,15 +17,4 @@ class CoordinatesModel: Object, Decodable {
         case longitude = "lon"
         case latitude = "lat"
     }
-    
-    required init(decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.longitude = try container.decode(Double.self, forKey: .longitude)
-        self.latitude = try container.decode(Double.self, forKey: .latitude)
-    }
-    
-    required init() {
-        super.init()
-    }
 }
