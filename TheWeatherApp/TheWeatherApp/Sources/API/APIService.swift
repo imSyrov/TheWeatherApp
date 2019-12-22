@@ -11,16 +11,15 @@ import Alamofire
 
 class APIService: Decodable {
     private let domain = "http://api.openweathermap.org"
-    private let endPoint = "/data/2.5"
+    private let path = "/data/2.5"
     private let apiKey = "67012d457377285f7c56f0008dd25f9e"
     
-    func getObject<T: Decodable> (for endPoint: WeatherType, parameters: Parameters, complition: @escaping (Result<T>) -> Void) {
+    func getObject<T: Decodable> (for endPoint: String, parameters: Parameters, complition: @escaping (Result<T>) -> Void) {
         
-        var allParameters = parameters
-        allParameters["units"] = "metric"
+        var allParameters = parameters        
         allParameters["appid"] = apiKey
         
-        guard let url = URL(string: domain)?.appendingPathComponent(self.endPoint).appendingPathComponent(endPoint.rawValue) else { return }
+        guard let url = URL(string: domain)?.appendingPathComponent(self.path).appendingPathComponent(endPoint) else { return }
         
         Alamofire.request(url, method: .get, parameters: allParameters, encoding: URLEncoding.queryString).responseJSON { response in
             if let error = response.error {

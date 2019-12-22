@@ -23,12 +23,40 @@ class WeatherOptionTableView: UITableView {
         self.register(WeatherOptionCell.self)
     }
     
-    func setRows(_ rows: [WeatherOptionTableRow]) {
+    private func setRows(_ rows: [WeatherOptionTableRow]) {
         self.rows = rows
     }
     
-    func setHeader(_ header: String) {
-        self.header = header
+    func fillTable(data: CurrentWeatherModel) {
+        var rows: [WeatherOptionTableRow] = []
+        rows.append(WeatherOptionTableRow(title: "Temperature", value: data.main?.temperature.toDegrees() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Weather", value: data.options[0].descriptionOption))
+        rows.append(WeatherOptionTableRow(title: "Humidity", value: data.main?.humidity.toPercent() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Pressure", value: data.main?.pressure.toPascal() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Wind", value: data.wind?.speed.toSpeed() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Cloudness", value: data.clouds?.cloudness.toPercent() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Min temperature", value: data.main?.minTemperature.toDegrees() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Max temperature", value: data.main?.maxTemperature.toDegrees() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Sunrise", value: data.system?.sunrise?.toString(with: "HH:mm:ss") ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Sunset", value: data.system?.sunset?.toString(with: "HH:mm:ss") ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Coordinates", value: "(\(data.coordinates?.longitude.toCoordinate() ?? "none"),\(data.coordinates?.latitude.toCoordinate() ?? "none"))"))
+        self.setRows(rows)
+    }
+    
+    func fillTable(data: ForecastDataModel, system: SystemInformationForecastModel) {
+        var rows: [WeatherOptionTableRow] = []
+        rows.append(WeatherOptionTableRow(title: "Temperature", value: data.main?.temperature.toDegrees() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Weather", value: data.options[0].descriptionOption))
+        rows.append(WeatherOptionTableRow(title: "Humidity", value: data.main?.humidity.toPercent() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Pressure", value: data.main?.pressure.toPascal() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Wind", value: data.wind?.speed.toSpeed() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Cloudness", value: data.clouds?.cloudness.toPercent() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Min temperature", value: data.main?.minTemperature.toDegrees() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Max temperature", value: data.main?.maxTemperature.toDegrees() ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Sunrise", value: system.sunrise?.toString(with: "HH:mm:ss") ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Sunset", value: system.sunset?.toString(with: "HH:mm:ss") ?? "none"))
+        rows.append(WeatherOptionTableRow(title: "Coordinates", value: "(\(system.coordinates?.longitude.toCoordinate() ?? "none"),\(system.coordinates?.latitude.toCoordinate() ?? "none"))"))
+        self.setRows(rows)
     }
 }
 
@@ -41,14 +69,10 @@ extension WeatherOptionTableView: UITableViewDataSource {
         let cell: WeatherOptionCell = self.dequeueReusableCell(for: indexPath)
         cell.configure(title: rows[indexPath.row].title, value: rows[indexPath.row].value)
         return cell
-    }
-    
-    /*func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return header
-    }*/
+    }    
 }
 
-extension WeatherOptionTableView {
+extension UITableView {
     func register<T: UITableViewCell> (_ cell: T.Type) {
         self.register(UINib(nibName: String(describing: cell.self), bundle: nil), forCellReuseIdentifier: String(describing: cell.self))
     }

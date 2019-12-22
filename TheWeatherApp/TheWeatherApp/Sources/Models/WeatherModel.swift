@@ -12,4 +12,12 @@ import RealmSwift
 class WeatherModel: Object, Decodable {
     @objc dynamic var current: CurrentWeatherModel?
     @objc dynamic var forecast: ForecastWeatherModel?
+    
+    init(current: CurrentWeatherModel?, forecast: ForecastWeatherModel?) {
+        self.current = current
+        self.forecast = forecast
+    }
+    
+    required init() {
+    }
 }

@@ -22,6 +22,7 @@ class MainController: UIViewController {
     
     
     var currentCity: String?
+    var currentWeather: CurrentWeatherModel?
     var forecastWeather: ForecastWeatherModel?
     var forecastCells: [ForecastDataModel] = [] {
         didSet {
@@ -60,33 +61,35 @@ class MainController: UIViewController {
         }
         else {
             loadWeatherFromDatabase()
+            self.activityIndicator.stopAnimating()
+            self.loadScreenView.isHidden = true
+            self.dataView.isHidden = false
         }
-        
-        self.activityIndicator.stopAnimating()
-        self.loadScreenView.isHidden = true
-        self.dataView.isHidden = false
     }
     
     func loadWeatherFromInternet(for city: String) {
-        let parameters: Parameters = ["q" : city]
-        let weatherModel = WeatherModel()
+        let request = WeatherRequest(for: city)
+        let requestGroup = DispatchGroup()
         
-        getCurrentWeather(parameters: parameters) { [weak self] result in
+        requestGroup.enter()
+        request.getCurrentWeather() { [weak self] result in
+            requestGroup.leave()
             switch result {
                 case .success(let weather):
-                    weatherModel.current = weather
+                    self?.currentWeather = weather
                     self?.conditionImageView.load(for: weather.options[0].icon)
-                    self?.fillTable(weather)
+                    self?.systemInfomationLabel.text = weather.name + "\t" + (weather.date?.toString(with: "dd.MM HH:mm") ?? "")
+                    self?.currentTableView.fillTable(data: weather)
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
             }
         }
         
-        getForecastWeather(parameters: parameters) { [weak self] result in
+        requestGroup.enter()
+        request.getForecastWeather() { [weak self] result in
+            requestGroup.leave()
             switch result {
                 case .success(let weather):
-                    weatherModel.forecast = weather
-                    DatabaseService.database.add(objects: [weatherModel])
                     self?.forecastWeather = weather
                     weather.data.forEach { data in
                         self?.forecastCells.append(data)
@@ -94,6 +97,16 @@ class MainController: UIViewController {
                 case .failure(let error):
                     self?.showAlert(message: "\(error.localizedDescription)")
             }
+        }
+        
+        requestGroup.notify(queue: DispatchQueue.main) {
+            if let current = self.currentWeather, let forecast = self.forecastWeather {
+                let weatherModel = WeatherModel(current: current, forecast: forecast)
+                DatabaseService.database.add(objects: [weatherModel])
+            }
+            self.activityIndicator.stopAnimating()
+            self.loadScreenView.isHidden = true
+            self.dataView.isHidden = false
         }
     }
     
@@ -103,7 +116,8 @@ class MainController: UIViewController {
             showAlert(message: "No Internet connection")
             guard let weather = objects.first else { return }
             guard let current = weather.current else { return }
-            self.fillTable(current)
+            self.currentTableView.fillTable(data: current)
+            self.systemInfomationLabel.text = current.name + "\t" + (current.date?.toString(with: "dd.MM HH:mm") ?? "")
             self.forecastWeather = weather.forecast            
             forecastWeather?.data.forEach { data in
                 self.forecastCells.append(data)
@@ -112,35 +126,6 @@ class MainController: UIViewController {
             showAlert(message: "Error: Datas can't be received")
             return
         }
-    }
-    
-    func getCurrentWeather(parameters: Parameters, complition: @escaping (Result<CurrentWeatherModel>) -> Void) {
-        let API = APIService()
-        API.getObject(for: .current, parameters: parameters, complition: complition)
-    }
-    
-    func getForecastWeather(parameters: Parameters, complition: @escaping (Result<ForecastWeatherModel>) -> Void) {
-        let API = APIService()
-        API.getObject(for: .forecast, parameters: parameters, complition: complition)
-    }
-    
-    func fillTable(_ data: CurrentWeatherModel) {
-        let header = data.name + "\t" + (data.date?.toString(with: "dd.MM HH:mm") ?? "0.0")
-        self.systemInfomationLabel.text = header
-        var rows: [WeatherOptionTableRow] = []
-        rows.append(WeatherOptionTableRow(title: "Temperature", value: data.main?.temperature.toDegrees() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Weather", value: data.options[0].descriptionOption))
-        rows.append(WeatherOptionTableRow(title: "Humidity", value: data.main?.humidity.toPercent() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Pressure", value: data.main?.pressure.toPascal() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Wind", value: data.wind?.speed.toSpeed() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Cloudness", value: data.clouds?.cloudness.toPercent() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Min temperature", value: data.main?.minTemperature.toDegrees() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Max temperature", value: data.main?.maxTemperature.toDegrees() ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Sunrise", value: data.system?.sunrise?.toString(with: "HH:mm:ss") ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Sunset", value: data.system?.sunset?.toString(with: "HH:mm:ss") ?? "none"))
-        rows.append(WeatherOptionTableRow(title: "Coordinates", value: "(\(data.coordinates?.longitude.toCoordinate() ?? "none"),\(data.coordinates?.latitude.toCoordinate() ?? "none"))"))
-        currentTableView.setHeader(header)
-        currentTableView.setRows(rows)
     }
     
     func showAlert(message: String) {

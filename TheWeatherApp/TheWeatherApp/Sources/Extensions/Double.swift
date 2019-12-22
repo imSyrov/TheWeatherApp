@@ -17,7 +17,7 @@ extension Double {
     }
     
     func toPascal() -> String {
-        return "\(Int(self * 0.75)) P"
+        return "\(Int(self * 0.75)) mmHg"
     }
     
     func toCoordinate() -> String {
