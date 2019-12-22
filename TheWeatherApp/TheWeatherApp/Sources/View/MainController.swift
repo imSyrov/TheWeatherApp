@@ -154,7 +154,7 @@ extension MainController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: ForecastWeatherCell = forecastCollectionView.dequeueReusable(for: indexPath)
-        cell.confugure(data: forecastCells[indexPath.row])
+        cell.configure(data: forecastCells[indexPath.row])
         return cell
     }
 }
