@@ -9,6 +9,7 @@
 import Foundation
 import RealmSwift
 
+//test
 class DatabaseService {
     static var database: DatabaseService = DatabaseService()
     let realm: Realm
