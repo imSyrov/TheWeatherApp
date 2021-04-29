@@ -20,18 +20,5 @@ class WeatherOptionModel: Object, Decodable {
         case main
         case descriptionOption = "description"
         case icon
-    }
-    
-    required init(decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.id = try container.decode(Int.self, forKey: .id)
-        self.main = try container.decode(String.self, forKey: .main)
-        self.descriptionOption = try container.decode(String.self, forKey: .descriptionOption)
-        self.icon = try container.decode(String.self, forKey: .icon)
-    }
-    
-    required init() {
-        super.init()
-    }
+    } 
 }

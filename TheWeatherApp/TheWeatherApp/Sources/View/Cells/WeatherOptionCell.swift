@@ -17,5 +17,4 @@ class WeatherOptionCell: UITableViewCell {
         titleLabel.text = title
         valueLabel.text = value
     }
-    
 }

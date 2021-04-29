@@ -11,7 +11,7 @@ import UIKit
 class WeatherOptionTableView: UITableView {
     
     private var header: String?
-    private var rows: [WeatherOptionTableRow] = [] {
+    private var rows: [WeatherOption] = [] {
         didSet {
             reloadData()
         }
@@ -23,12 +23,40 @@ class WeatherOptionTableView: UITableView {
         self.register(WeatherOptionCell.self)
     }
     
-    func setRows(_ rows: [WeatherOptionTableRow]) {
+    private func setRows(_ rows: [WeatherOption]) {
         self.rows = rows
     }
     
-    func setHeader(_ header: String) {
-        self.header = header
+    func fillTable(data: CurrentWeatherModel) {
+        var rows: [WeatherOption] = []
+        rows.append(.temperature(data.main?.temperature ?? 0.0))
+        rows.append(.weather(data.options[0].descriptionOption))
+        rows.append(.humidity(data.main?.humidity ?? 0))
+        rows.append(.pressure(data.main?.pressure ?? 0.0))
+        rows.append(.wind(data.wind?.speed ?? 0.0))
+        rows.append(.clodness(data.clouds?.cloudness ?? 0))
+        rows.append(.minTemperature(data.main?.minTemperature ?? 0.0))
+        rows.append(.maxTemperature(data.main?.maxTemperature ?? 0.0))
+        rows.append(.sunrise(data.system?.sunrise ?? Date()))
+        rows.append(.sunset(data.system?.sunset ?? Date()))
+        rows.append(.coordinates(data.coordinates ?? CoordinatesModel()))
+        self.setRows(rows)
+    }
+    
+    func fillTable(data: ForecastDataModel, system: SystemInformationForecastModel) {
+        var rows: [WeatherOption] = []
+        rows.append(.temperature(data.main?.temperature ?? 0.0))
+        rows.append(.weather(data.options[0].descriptionOption))
+        rows.append(.humidity(data.main?.humidity ?? 0))
+        rows.append(.pressure(data.main?.pressure ?? 0.0))
+        rows.append(.wind(data.wind?.speed ?? 0.0))
+        rows.append(.clodness(data.clouds?.cloudness ?? 0))
+        rows.append(.minTemperature(data.main?.minTemperature ?? 0.0))
+        rows.append(.maxTemperature(data.main?.maxTemperature ?? 0.0))
+        rows.append(.sunrise(system.sunrise ?? Date()))
+        rows.append(.sunset(system.sunset ?? Date()))
+        rows.append(.coordinates(system.coordinates ?? CoordinatesModel()))
+        self.setRows(rows)
     }
 }
 
@@ -41,19 +69,5 @@ extension WeatherOptionTableView: UITableViewDataSource {
         let cell: WeatherOptionCell = self.dequeueReusableCell(for: indexPath)
         cell.configure(title: rows[indexPath.row].title, value: rows[indexPath.row].value)
         return cell
-    }
-    
-    /*func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return header
-    }*/
-}
-
-extension WeatherOptionTableView {
-    func register<T: UITableViewCell> (_ cell: T.Type) {
-        self.register(UINib(nibName: String(describing: cell.self), bundle: nil), forCellReuseIdentifier: String(describing: cell.self))
-    }
-    
-    func dequeueReusableCell<T: UITableViewCell> (for indexPath: IndexPath) -> T {
-        self.dequeueReusableCell(withIdentifier: String(describing: T.self), for: indexPath) as! T
-    }
+    }    
 }

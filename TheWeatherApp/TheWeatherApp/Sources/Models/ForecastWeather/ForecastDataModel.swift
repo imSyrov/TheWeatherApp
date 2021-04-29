@@ -23,18 +23,4 @@ class ForecastDataModel: Object, Decodable {
         case clouds
         case wind
     }
-    
-    required init(decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.date = try container.decode(Date.self, forKey: .date)
-        self.main = try container.decode(MainWeatherModel.self, forKey: .main)
-        self.options = try container.decode(List<WeatherOptionModel>.self, forKey: .options)
-        self.clouds = try container.decode(CloudModel.self, forKey: .clouds)
-        self.wind = try container.decode(WindModel.self, forKey: .wind)
-    }
-    
-    required init() {
-        super.init()
-    }
 }

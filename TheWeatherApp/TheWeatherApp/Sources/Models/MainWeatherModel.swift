@@ -23,18 +23,4 @@ class MainWeatherModel: Object, Decodable {
         case minTemperature = "temp_min"
         case maxTemperature = "temp_max"
     }
-    
-    required init(decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.temperature = try container.decode(Double.self, forKey: .temperature)
-        self.pressure = try container.decode(Double.self, forKey: .pressure)        
-        self.humidity = try container.decode(Int.self, forKey: .humidity)
-        self.minTemperature = try container.decode(Double.self, forKey: .minTemperature)
-        self.maxTemperature = try container.decode(Double.self, forKey: .maxTemperature)
-    }
-    
-    required init() {
-        super.init()
-    }
 }
